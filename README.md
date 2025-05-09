@@ -2,121 +2,103 @@
 
 ## 1. Test network connection
 
+* 节点带有 `CriticalAddonsOnly=true` taint（需要 toleration）
+* 部署使用 `default` namespace（不建议），而 Defender 多部署在 `kube-system`
+* Pod 镜像拉取失败（需要访问公网）
+* 缺少 CPU/内存资源限制（调度器可能不给资源）
+
 ---
-# 🔍 Microsoft Defender 连接性测试（AKS 环境）
 
-本操作指南用于在 Azure Kubernetes Service (AKS) 中测试 Microsoft Defender 相关 API 域名的网络连通性，适用于目标容器中无法直接 `exec` 进入的场景（如 `distroless` 镜像）。
+## ✅ 完善后的 DaemonSet YAML（100%兼容 AKS）
+
+以下是优化后的 **可直接在 AKS 中使用的 DaemonSet**，具备：
+
+* ✅ 容忍所有 taint（保证能部署到 system node）
+* ✅ 资源限制（防止被驱逐）
+* ✅ 设置 namespace 为 `kube-system`
+* ✅ 使用稳定镜像 `nicolaka/netshoot`
+* ✅ 自动打印测试日志
+* ✅ 支持节点调度器过滤兼容
 
 ---
 
-## 🚀 步骤 1：在目标节点上运行调试 Pod
-
-### 📄 创建调试 Pod 配置文件（`debug-net.yaml`）
-
-```
-nano debug-net.yaml
-```
+### 📄 文件名：`defender-connectivity-daemonset.yaml`
 
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
-  name: debug-net
+  name: defender-netcheck
   namespace: kube-system
 spec:
-  nodeSelector:
-    kubernetes.io/hostname: aks-agentpool-11763858-vmss000007
-  tolerations:
-  - key: "CriticalAddonsOnly"
-    operator: "Exists"
-  containers:
-  - name: debug
-    image: nicolaka/netshoot
-    command: ["sleep", "3600"]
-  restartPolicy: Never
-````
-
-![image](https://github.com/user-attachments/assets/1690df7d-10a9-4ba5-80e9-37f23270577b)
-
-
-> ✅ 替换 `nodeSelector` 的值为 Defender Pod 所在节点名
-
----
-
-### 📥 应用 Pod
-
-```bash
-kubectl apply -f debug-net.yaml
-```
-
-检查 Pod 状态, 确保是running 状态
-
-```bash
-kubectl get pod debug-net -n kube-system
-```
-
-![image](https://github.com/user-attachments/assets/671b7c3e-cbee-42a0-bd28-38e2af02b1c4)
-
----
-
-## 🧪 步骤 2：进入调试 Pod 并运行连通性测试
-
-```bash
-kubectl exec -it debug-net -n kube-system -- bash
-```
-
-进入后粘贴以下脚本：
-
-```bash
-for url in \
-  "https://ami.cloud-dev.defender.microsoft.com" \
-  "https://api.cloud-dev.defender.microsoft.com" \
-  "https://api.cloud-stg.defender.microsoft.com" \
-  "https://api.cloud.defender.microsoft.com" \
-  "https://api.defender.microsoft.com"; do
-
-  echo -e "\n🔍 Testing: $url"
-  domain=$(echo "$url" | awk -F[/:] '{print $4}')
-
-  echo "1️⃣ DNS Lookup:"
-  nslookup $domain || echo "❌ DNS failed"
-
-  echo "2️⃣ HTTPS Connectivity:"
-  curl -s -o /dev/null -w " ↪ HTTP Code: %{http_code}, Time: %{time_total}s\n" --connect-timeout 5 "$url" || echo "❌ Curl failed"
-
-  echo "3️⃣ TLS Certificate Info:"
-  echo | openssl s_client -connect "$domain:443" -servername "$domain" 2>/dev/null | openssl x509 -noout -dates -subject -issuer || echo "❌ TLS Cert fetch failed"
-
-done
+  selector:
+    matchLabels:
+      app: defender-netcheck
+  template:
+    metadata:
+      labels:
+        app: defender-netcheck
+    spec:
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: checker
+        image: nicolaka/netshoot
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            echo "[🟢 Start connectivity test on $(hostname)]"
+            for url in \
+              "https://ami.cloud-dev.defender.microsoft.com" \
+              "https://api.cloud-dev.defender.microsoft.com" \
+              "https://api.cloud-stg.defender.microsoft.com" \
+              "https://api.cloud.defender.microsoft.com" \
+              "https://api.defender.microsoft.com"; do
+              echo "==== $url ====";
+              domain=$(echo $url | awk -F[/:] '{print $4}');
+              nslookup $domain || echo "DNS failed";
+              curl -s -o /dev/null -w "↪ HTTP Code: %{http_code}, Time: %{time_total}s\n" --connect-timeout 5 $url || echo "Curl failed";
+              echo "";
+            done
+            sleep 3600
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      restartPolicy: Always
 ```
 
 ---
 
-## 🧹 步骤 3：测试完成后清理调试 Pod
+## ✅ 正确的部署命令：
 
 ```bash
-kubectl delete pod debug-net -n kube-system
+kubectl apply -f defender-connectivity-daemonset.yaml
 ```
 
 ---
 
-## ✅ 输出示例（成功）
+## ✅ 查看日志输出（可多节点对比）：
 
+```bash
+kubectl get pods -n kube-system -l app=defender-netcheck -o wide
 ```
-🔍 Testing: https://api.defender.microsoft.com
-1️⃣ DNS Lookup:
-Name:	api.defender.microsoft.com
-Address: 20.190.130.10
+![image](https://github.com/user-attachments/assets/815ba46a-37c9-45f5-9d1c-e8fb0c279e58)
 
-2️⃣ HTTPS Connectivity:
- ↪ HTTP Code: 403, Time: 0.134s
-
-3️⃣ TLS Certificate Info:
-notBefore=Mar 15 00:00:00 2025 GMT
-notAfter=Jun 15 23:59:59 2025 GMT
-issuer=Microsoft Azure TLS Issuing CA 06
+```bash
+kubectl logs -n kube-system <pod-name>
 ```
 
 ---
 
-> 💡 可用于 Defender for IoT / MDI / MDE 等组件的域名连接性排查。
+## ✅ 完成后清理：
+
+```bash
+kubectl delete -f defender-connectivity-daemonset.yaml
+```
+
+---
+
