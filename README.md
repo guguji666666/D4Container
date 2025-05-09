@@ -127,14 +127,16 @@ kubectl logs microsoft-defender-publisher-ds-vv7dg -n kube-system
 
 ## ✅ 完善后的 DaemonSet YAML（100%兼容 AKS）
 
-以下是优化后的 **可直接在 AKS 中使用的 DaemonSet**，具备：
+### ✅ 特性一览（Features）
 
-* ✅ 容忍所有 taint（保证能部署到 system node）
-* ✅ 资源限制（防止被驱逐）
-* ✅ 设置 namespace 为 `kube-system`
-* ✅ 使用稳定镜像 `nicolaka/netshoot`
-* ✅ 自动打印测试日志
-* ✅ 支持节点调度器过滤兼容
+* ✅ 支持部署到带有 taint 的 system 节点（容忍所有 taint）
+* ✅ 设置合适的资源限制，避免被 kubelet 驱逐（eviction）
+* ✅ 默认部署在 `kube-system` 命名空间中
+* ✅ 使用稳定可靠的基础镜像：`nicolaka/netshoot`
+* ✅ 启动后自动执行网络测试并输出日志
+* ✅ 支持使用节点调度器（nodeSelector / affinity）进行灵活调度
+
+---
 
 ---
 
