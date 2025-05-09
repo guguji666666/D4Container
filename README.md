@@ -47,6 +47,11 @@ microsoft-defender-publisher-ds-vv7dg                  1/1   Running   0     26h
 Some pods (like `collector-ds-*`) have **multiple containers**, so you need to fetch their names:
 
 ```bash
+kubectl get pod <pod name> -n kube-system -o jsonpath='{.spec.containers[*].name}'
+```
+
+Sample
+```bash
 kubectl get pod microsoft-defender-collector-ds-dbjpz -n kube-system -o jsonpath='{.spec.containers[*].name}'
 ```
 
