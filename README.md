@@ -104,18 +104,6 @@ kubectl logs microsoft-defender-publisher-ds-vv7dg -n kube-system
 
 ---
 
-💬 **Feel free to submit an issue or PR if you’d like to improve this guide.**
-
-```
-
----
-
-是否需要我将其直接转换为 GitHub 仓库的 `README.md` 文件并给出仓库结构建议？
-```
-
----
-
-
 ## 2. Test network connection
 
 * 节点带有 `CriticalAddonsOnly=true` taint（需要 toleration）
