@@ -49,11 +49,13 @@ spec:
 kubectl apply -f debug-net.yaml
 ```
 
-检查 Pod 状态：
+检查 Pod 状态, 确保是running 状态
 
 ```bash
 kubectl get pod debug-net -n kube-system
 ```
+
+![image](https://github.com/user-attachments/assets/671b7c3e-cbee-42a0-bd28-38e2af02b1c4)
 
 ---
 
