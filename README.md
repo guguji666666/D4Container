@@ -26,6 +26,9 @@ metadata:
 spec:
   nodeSelector:
     kubernetes.io/hostname: aks-agentpool-11763858-vmss000007
+  tolerations:
+  - key: "CriticalAddonsOnly"
+    operator: "Exists"
   containers:
   - name: debug
     image: nicolaka/netshoot
