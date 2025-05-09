@@ -113,9 +113,10 @@ kubectl logs microsoft-defender-publisher-ds-vv7dg -n kube-system
 是否需要我将其直接转换为 GitHub 仓库的 `README.md` 文件并给出仓库结构建议？
 ```
 
+---
 
 
-## 1. Test network connection
+## 2. Test network connection
 
 * 节点带有 `CriticalAddonsOnly=true` taint（需要 toleration）
 * 部署使用 `default` namespace（不建议），而 Defender 多部署在 `kube-system`
