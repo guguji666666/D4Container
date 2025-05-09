@@ -2,8 +2,6 @@
 
 ## 1. Test network connection
 
-以下是为 GitHub 优化、美化后的 Markdown 格式，适合你直接作为 `.md` 文档放进项目中，例如 `defender-connectivity-test.md`：
-
 ---
 
 ````markdown
