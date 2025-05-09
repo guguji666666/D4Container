@@ -15,6 +15,10 @@
 
 ### 📄 创建调试 Pod 配置文件（`debug-net.yaml`）
 
+```
+nano debug-net.yaml
+```
+
 ```yaml
 apiVersion: v1
 kind: Pod
