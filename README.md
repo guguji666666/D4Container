@@ -138,8 +138,6 @@ kubectl logs microsoft-defender-publisher-ds-vv7dg -n kube-system
 
 ---
 
----
-
 ### 📄 文件名：`defender-connectivity-daemonset.yaml`
 
 ```yaml
