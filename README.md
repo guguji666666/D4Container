@@ -3,8 +3,6 @@
 ## 1. Test network connection
 
 ---
-
-````markdown
 # 🔍 Microsoft Defender 连接性测试（AKS 环境）
 
 本操作指南用于在 Azure Kubernetes Service (AKS) 中测试 Microsoft Defender 相关 API 域名的网络连通性，适用于目标容器中无法直接 `exec` 进入的场景（如 `distroless` 镜像）。
