@@ -33,6 +33,9 @@ spec:
   restartPolicy: Never
 ````
 
+![image](https://github.com/user-attachments/assets/1690df7d-10a9-4ba5-80e9-37f23270577b)
+
+
 > ✅ 替换 `nodeSelector` 的值为 Defender Pod 所在节点名
 
 ---
