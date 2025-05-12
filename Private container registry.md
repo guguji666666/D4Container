@@ -33,8 +33,8 @@ mkdir -p /root/data/docker_data/cloudflared
 ```bash
 cd /root/data/docker_data/docker-registry
 
-USERNAME=guguji
-PASSWORD=yourpassword
+USERNAME=<your username>
+PASSWORD=<yourpassword>
 
 docker run --rm \
   --entrypoint htpasswd \
@@ -126,7 +126,7 @@ docker pull registry.example.com/nginx-gugu
 ## 🔎 查看已有镜像
 
 ```bash
-curl -u guguji:yourpassword https://registry.example.com/v2/_catalog
+curl -u <your username>:<yourpassword> https://registry.example.com/v2/_catalog
 ```
 
 ---
