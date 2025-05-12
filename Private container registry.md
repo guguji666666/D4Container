@@ -1,4 +1,4 @@
-# 🐳 私有 Docker Registry 部署文档（Cloudflare Tunnel + Token 模式，无 UI）
+# 🐳 私有 Docker Registry 部署文档（Cloudflare Tunnel + Token 模式）
 
 > 使用 Cloudflare Tunnel 绑定域名并启用 HTTPS 加密，不暴露真实公网 IP，无需本地证书挂载，支持认证与 push/pull。
 
