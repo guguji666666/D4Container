@@ -110,6 +110,7 @@ docker compose up -d
 ```bash
 docker login https://registry.example.com
 ```
+![image](https://github.com/user-attachments/assets/737b5b23-f0c0-45d2-9b76-3830e213eb27)
 
 ---
 
@@ -121,6 +122,11 @@ docker push registry.example.com/nginx-gugu
 docker pull registry.example.com/nginx-gugu
 ```
 
+![image](https://github.com/user-attachments/assets/7c7d9f62-c4d2-49c4-9847-699721272bc2)
+
+![image](https://github.com/user-attachments/assets/0c35f4be-a84a-4f13-9300-fb075a85a7b3)
+
+
 ---
 
 ## 🔎 查看已有镜像
@@ -128,6 +134,7 @@ docker pull registry.example.com/nginx-gugu
 ```bash
 curl -u <your username>:<yourpassword> https://registry.example.com/v2/_catalog
 ```
+![image](https://github.com/user-attachments/assets/c26c6bf7-e75e-4bd0-9cc6-c89013a42a37)
 
 ---
 
