@@ -1,23 +1,24 @@
-🐳 私有 Docker Registry 部署指南（Cloudflare Tunnel + Token 模式，无 UI）
+# 🐳 私有 Docker Registry 部署文档（Cloudflare Tunnel + Token 模式，无 UI）
 
-使用 Cloudflare Tunnel + Zero Trust 提供的 Token 接入，避免暴露公网端口，支持认证 + HTTPS 加密访问，无需本地证书挂载。
+> 使用 Cloudflare Tunnel 绑定域名并启用 HTTPS 加密，不暴露真实公网 IP，无需本地证书挂载，支持认证与 push/pull。
 
-⸻
+---
 
-📁 项目结构一览
+## 📁 项目目录结构
 
+```bash
 /root/data/docker_data/
 ├── docker-registry/
 │   ├── docker-compose.yaml     # Registry 服务定义
 │   ├── auth/                   # htpasswd 密码文件
 │   └── data/                   # 镜像数据目录
 ├── cloudflared/
-│   ├── docker-compose.yaml     # cloudflared Tunnel 服务
+│   └── docker-compose.yaml     # Cloudflare Tunnel 服务
 
 
 ⸻
 
-🧱 步骤一：创建目录结构
+🧱 步骤一：创建目录
 
 mkdir -p /root/data/docker_data/docker-registry/auth
 mkdir -p /root/data/docker_data/docker-registry/data
@@ -26,7 +27,7 @@ mkdir -p /root/data/docker_data/cloudflared
 
 ⸻
 
-🔐 步骤二：创建认证文件（htpasswd）
+🔐 步骤二：创建登录认证文件（htpasswd）
 
 cd /root/data/docker_data/docker-registry
 
@@ -38,10 +39,13 @@ docker run --rm \
   httpd:2 \
   -Bbn "$USERNAME" "$PASSWORD" > auth/htpasswd
 
+📌 可多次运行该命令添加多个用户（推荐使用 >> 而非 > 覆盖）
 
 ⸻
 
-🛠️ 步骤三：配置 Registry 服务（docker-registry/docker-compose.yaml）
+🛠️ 步骤三：配置 Registry 服务（docker-compose.yaml）
+
+路径：/root/data/docker_data/docker-registry/docker-compose.yaml
 
 version: '3.8'
 
@@ -51,7 +55,7 @@ services:
     container_name: docker-registry
     restart: always
     ports:
-      - "127.0.0.1:5000:5000"  # ⚠️ 仅本地监听，供 tunnel 转发
+      - "127.0.0.1:5000:5000"  # 本地监听，供 cloudflared 反代
     environment:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
@@ -63,7 +67,9 @@ services:
 
 ⸻
 
-🚇 步骤四：配置 Cloudflare Tunnel（cloudflared/docker-compose.yaml）
+🚇 步骤四：配置 Cloudflare Tunnel 服务（Token 模式）
+
+路径：/root/data/docker_data/cloudflared/docker-compose.yaml
 
 version: '3.8'
 
@@ -74,12 +80,10 @@ services:
     restart: always
     command: tunnel --no-autoupdate run --token <YOUR-CLOUDFLARE-TUNNEL-TOKEN>
 
-💡 你可以从 Cloudflare Zero Trust 仪表盘添加 Tunnel，并获取专属 Token。
-例如：
+🔑 替换 <YOUR-CLOUDFLARE-TUNNEL-TOKEN> 为你在 Cloudflare Zero Trust 仪表盘获取的 token。
 
+你可以在此处生成：
 https://dash.cloudflare.com > Zero Trust > Access > Tunnels > Create Tunnel
-
-
 
 ⸻
 
@@ -94,40 +98,50 @@ docker compose up -d
 
 ⸻
 
-🔐 登录私有仓库
+🔐 登录你的私有仓库
 
 docker login https://registry.example.com
 
+输入你设置的用户名与密码。
 
 ⸻
 
-📦 推送和拉取镜像
+📦 镜像推送与拉取示例
 
+# 打标签
 docker tag nginx registry.example.com/nginx-gugu
+
+# 推送镜像
 docker push registry.example.com/nginx-gugu
+
+# 拉取镜像
 docker pull registry.example.com/nginx-gugu
 
 
 ⸻
 
-🔎 查看镜像列表
+🔎 查看已有镜像
 
 curl -u guguji:yourpassword https://registry.example.com/v2/_catalog
 
 
 ⸻
 
-✅ 总结
+🧹 可选：清理无用资源
 
-特性	状态
-TLS 加密	✅ Cloudflare 自动处理
-本地监听端口	✅ 避免公网暴露
-无需证书文件或凭据挂载	✅ 使用 --token 模式
-支持身份验证（htpasswd）	✅
-支持 push/pull	✅
-支持 curl API 查询	✅
+docker system prune -af
+docker volume prune -f
+docker network prune -f
 
 
 ⸻
 
-需要我将这份教程导出为 .md 文件吗？或者要不要我附一段创建 Cloudflare Tunnel 的 GUI 操作说明？
+✅ 部署要点总结
+
+项目	状态
+TLS 加密	✅ Cloudflare 自动处理
+本地监听避免公网暴露	✅
+用户认证（htpasswd）	✅
+支持 curl 查询镜像列表	✅
+支持 push/pull 操作	✅
+无需本地证书或 tunnel 凭据挂载	✅ 使用 token 模式
